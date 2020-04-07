@@ -1,0 +1,18 @@
+exportPattern("^[[:alpha:]]+")
+
+export(simrnet)
+export(plot.simrnet)
+export(genpar)
+
+importFrom("glmnet", "glmnet")
+importFrom("glmnet", "cv.glmnet")
+importFrom("glmnet", "predict.glmnet")
+importFrom("glmnet", "coef.glmnet")
+importFrom("glasso", "glasso")
+importFrom("Matrix", "Matrix")
+importFrom("graphics", "boxplot", "par")
+importFrom("stats", "prcomp", "rnorm", "sd")
+importFrom("stats", "coef", "predict")
+
+
+S3method("plot","simrnet")

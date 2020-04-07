@@ -1,0 +1,14 @@
+Package: simrnet
+Type: Package
+Title: Monte Carlo Simulation of High-Dimensional Regression Based on
+        Scale-Free Networks of Exloratory Variables
+Version: 0.1
+Date: 2020-03-20
+Author: Yuichi Okinaga and Kei Hirose
+Maintainer: Kei Hirose <mail@keihirose.com>
+Depends: R (>= 3.5.0), glmnet, glasso, Matrix
+Description: An R package "simrnet" conducts Monte Carlo simulation of the lasso and principal component regression (PCR). The gene regulatory networks based on the exploratory variables are estimated to be scale-free.
+License: GPL (>= 2)
+URL: http://www.keihirose.com
+NeedsCompilation: yes
+Packaged: 2020-04-07 02:02:54 UTC; hirosekei
