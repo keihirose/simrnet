@@ -6,7 +6,7 @@ Conduct Monte Carlo simulations
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
-Conduct Monte Carlo simulations and calculate the root mean squared errors (RMSE).
+Conduct Monte Carlo simulations, and calculate the root mean squared errors (RMSE) and coefficient of determination.
 }
 \usage{
 simrnet(object, num.obs = c(50, 100, 200, 300, 500, 1000), num.test = 1000, 
@@ -40,6 +40,9 @@ Logical flag for displaying the message of which Sigma is currently computed.
 \value{
   \item{RMSE}{
   The matrix of RMSE obtained by the Monte Carlo simulation. Its row and column are \code{num.obs} and \code{times.sim}, respectively.
+  }
+  \item{R_square}{
+  The matrix of coefficient of determination obtained by the Monte Carlo simulation. Its row and column are \code{num.obs} and \code{times.sim}, respectively.
   }
 }
 \references{

@@ -19,23 +19,22 @@ simrnet <- function(object, num.obs = c(50, 100, 200, 300, 500, 1000), num.test 
 
 
     # simulation
-    RMSE <- vector(3, mode = "list")
-    names(RMSE) <- paste("Sigma", 1:3, sep="")
+    RMSE <- R_square <- vector(3, mode = "list")
+    names(RMSE) <- names(R_square) <- paste("Sigma", 1:3, sep="")
     
     for(num.Sigma in 1:3){
       
-        #if(msg) cat(paste("monte carlo simulation for Sigma = ", num.Sigma, ": computing", sep = ""))
         if(msg) cat(paste("Monte Carlo simulation for Sigma", num.Sigma, ": computing", sep = ""))
-        RMSE[[num.Sigma]] <- vector(2, mode = "list")  # image of structure : 1-1, 1-2, 2-1, 2-2, 3-1, 3-2
-        names(RMSE[[num.Sigma]]) <- c("lasso", "PCR")
+        RMSE[[num.Sigma]] <- R_square[[num.Sigma]] <- vector(2, mode = "list")  # image of structure : 1-1, 1-2, 2-1, 2-2, 3-1, 3-2
+        names(RMSE[[num.Sigma]]) <- names(R_square[[num.Sigma]]) <- c("lasso", "PCR")
         
         for(N in num.obs){  
           
             for(i in 1:times.sim){
               
                 # generate data X and Y randomly
-                #Z <- matrix(rnorm((N+1000)*p), (N+1000), p)
-                #X.rand <- Z %*% (A.all[[num.Sigma]]) + matrix(mu, (N+1000), p, byrow = TRUE)
+                # Z <- matrix(rnorm((N+1000)*p), (N+1000), p)
+                # X.rand <- Z %*% (A.all[[num.Sigma]]) + matrix(mu, (N+1000), p, byrow = TRUE)
                 Z <- matrix(rnorm((N+num.test)*p), (N+num.test), p)
                 X.rand <- Z %*% (A.all[[num.Sigma]]) + matrix(mu, (N+num.test), p, byrow = TRUE)
                 
@@ -43,7 +42,6 @@ simrnet <- function(object, num.obs = c(50, 100, 200, 300, 500, 1000), num.test 
                 X.lasso.test <- X.rand[-(1:N), ]
                 
                 Y.lasso.train <- predict(res, newx = X.lasso.train, s = "lambda.min") + rnorm(N, 0, sd.error)
-                #Y.lasso.test <- predict.glmnet(res, newx = X.lasso.test, s = "lambda.min") + rnorm(1000, 0, sd.error)
                 Y.lasso.test <- predict(res, newx = X.lasso.test, s = "lambda.min") + rnorm(num.test, 0, sd.error)
                 
                 # generate X.pcr.train and X.pcr.test which are used in PCR
@@ -66,14 +64,16 @@ simrnet <- function(object, num.obs = c(50, 100, 200, 300, 500, 1000), num.test 
                 
                 # predict y and get RMSE
                 res.lasso <- cv.glmnet(X.lasso.train, Y.lasso.train, nfolds=nfolds.glmnet)
-                Y.lasso.pred <- predict(res.lasso, newx = X.lasso.test, s = "lambda.min")
-                #RMSE[[num.Sigma]][[1]] <- c(RMSE[[num.Sigma]][[1]], sqrt((sum((Y.lasso.pred - Y.lasso.test)^2))/1000 ))
-                RMSE[[num.Sigma]][[1]] <- c(RMSE[[num.Sigma]][[1]], sqrt((sum((Y.lasso.pred - Y.lasso.test)^2))/num.test ))
+                Y.lasso.train.pred <- predict(res.lasso, newx = X.lasso.train, s = "lambda.min")
+                Y.lasso.test.pred <- predict(res.lasso, newx = X.lasso.test, s = "lambda.min")
+                RMSE[[num.Sigma]][[1]] <- c(RMSE[[num.Sigma]][[1]], sqrt((sum((Y.lasso.test.pred - Y.lasso.test)^2))/num.test ))
+                R_square[[num.Sigma]][[1]] <- c(R_square[[num.Sigma]][[1]], (sum((Y.lasso.train.pred - mean(Y.lasso.train))^2) / sum((Y.lasso.train - mean(Y.lasso.train))^2)) )
                 
                 res.pcr <- cv.glmnet(X.pcr.train, Y.lasso.train, nfolds=nfolds.glmnet)
-                Y.pcr.pred <- predict(res.pcr, newx = X.pcr.test, s = "lambda.min")
-                #RMSE[[num.Sigma]][[2]] <- c(RMSE[[num.Sigma]][[2]], sqrt((sum((Y.pcr.pred - Y.lasso.test)^2))/1000 ))
-                RMSE[[num.Sigma]][[2]] <- c(RMSE[[num.Sigma]][[2]], sqrt((sum((Y.pcr.pred - Y.lasso.test)^2))/num.test ))
+                Y.pcr.train.pred <- predict(res.pcr, newx = X.pcr.train, s = "lambda.min")
+                Y.pcr.test.pred <- predict(res.pcr, newx = X.pcr.test, s = "lambda.min")
+                RMSE[[num.Sigma]][[2]] <- c(RMSE[[num.Sigma]][[2]], sqrt((sum((Y.pcr.test.pred - Y.lasso.test)^2))/num.test ))
+                R_square[[num.Sigma]][[2]] <- c(R_square[[num.Sigma]][[2]], (sum((Y.pcr.train.pred - mean(Y.lasso.train))^2) / sum((Y.lasso.train - mean(Y.lasso.train))^2)) )
                 
             }
             
@@ -81,14 +81,14 @@ simrnet <- function(object, num.obs = c(50, 100, 200, 300, 500, 1000), num.test 
             
         }
           
-        dim(RMSE[[num.Sigma]][[1]]) <- dim(RMSE[[num.Sigma]][[2]]) <- c(times.sim, length(num.obs))  # convert vector of RMSE to matrix
-        colnames(RMSE[[num.Sigma]][[1]]) <- colnames(RMSE[[num.Sigma]][[2]]) <- num.obs
+        dim(RMSE[[num.Sigma]][[1]]) <- dim(RMSE[[num.Sigma]][[2]]) <- dim(R_square[[num.Sigma]][[1]]) <- dim(R_square[[num.Sigma]][[2]]) <- c(times.sim, length(num.obs))  # convert vector of RMSE to matrix
+        colnames(RMSE[[num.Sigma]][[1]]) <- colnames(RMSE[[num.Sigma]][[2]]) <- colnames(R_square[[num.Sigma]][[1]]) <- colnames(R_square[[num.Sigma]][[2]]) <- num.obs
         
         
         if(msg) cat("\n")
         }
     
-    ans <- list(RMSE=RMSE)
+    ans <- list(RMSE=RMSE, R_square=R_square)
     ans$call <- match.call()
     class(ans) <- "simrnet"
     ans

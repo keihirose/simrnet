@@ -1,5 +1,5 @@
 genpar <- function(X, Y, rho, scale=TRUE, delta.EBIC=0.5, delta.scalefree = 1, maxit.weight=100, maxit.glasso = 10, n.test = 10, nfolds.glmnet=10, msg = TRUE){
-    if(class(X)!="matrix") stop("\"X\" must be a matrix.")
+    if(class(X)[1]!="matrix") stop("\"X\" must be a matrix.")
     if(class(Y)!="numeric") stop("\"Y\" must be a numeric vector.")
     if(nrow(X)!=length(Y)) stop("The number of rows in \"X\" must be equal to length of \"Y\".")
     if(class(rho)!="numeric") stop("\"rho\" must be a numeric vector.")
@@ -52,7 +52,9 @@ genpar <- function(X, Y, rho, scale=TRUE, delta.EBIC=0.5, delta.scalefree = 1, m
             omega <- Matrix(fit$wi)
             sigma <- Matrix(fit$w)
             w <- 1/(Matrix::colSums(abs(omega)) - abs(Matrix::diag(omega)) + delta.scalefree)
-            wmat <- sqrt(tcrossprod(w))
+            wmat <- matrix(w, p, p) + matrix(w, p, p, byrow=T)
+            wmat <- wmat / 2
+            #wmat <- sqrt(tcrossprod(w))
             diag(wmat) <- 0
             
             #calculate model selection criteria
@@ -101,13 +103,19 @@ genpar <- function(X, Y, rho, scale=TRUE, delta.EBIC=0.5, delta.scalefree = 1, m
     res <- cv.glmnet(X.train, Y.train, nfolds=nfolds.glmnet)
     Y.pred <- predict(res, newx = X.test, s = "lambda.min")
     #sd.error <- sqrt(sum((Y.pred-Y.test)^2)/10)
-    sd.error <- sqrt(sum((Y.pred-Y.test)^2)/num.test)
+    sd.error <- sqrt(sum((Y.pred-Y.test)^2)/length(num.test))
     
     # prepare for generating data (determine mu and A)
     mu <- colMeans(X)
     #mu <- apply(X, 2, mean)
     
-    # if Sigmas are not full rank, we add a tiny number to diagonal element
+    # adjust SNR
+    beta <- coef(res, s = "lambda.min")
+    SNR.all <- lapply(Sigma.all, function(x){(t(beta[-1]) %*% x %*% beta[-1]) / (sd.error)^2})
+    Sigma.all[[2]] <- Sigma.all[[2]] * as.numeric(SNR.all[[1]] / SNR.all[[2]])
+    Sigma.all[[3]] <- Sigma.all[[3]] * as.numeric(SNR.all[[1]] / SNR.all[[3]])
+    
+    # if Sigmas are not full rank, we add a tiny number to diagonal elements
     A.all <- try(lapply(Sigma.all, chol), silent = TRUE)
     if(class(A.all) == "try-error"){
         Sigma.all <- lapply(Sigma.all, function(x){x <- x + x[1, 1] * 1e-5 * diag(nrow(x))})

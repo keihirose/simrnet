@@ -2,11 +2,11 @@
 \alias{plot.simrnet}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Box and whisker plot of RMSE
+Box and whisker plot of RMSE and R-square
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
-Box and whisker plot of RMSE obtained by simrnet function.
+Box and whisker plot of RMSE and R-square obtained by simrnet function.
 }
 \usage{
 \method{plot}{simrnet}(x, ...)
@@ -14,7 +14,7 @@ Box and whisker plot of RMSE obtained by simrnet function.
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
-The list of RMSE obtained by simrnet function. 
+The list of RMSE and R-square obtained by simrnet function. 
 }
   \item{...}{
 Additional arguments of details in boxplot.
